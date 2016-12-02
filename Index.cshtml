@@ -1,0 +1,93 @@
+﻿@model dynamic
+@using LOFT.Web.Global
+@{
+    string cityId, townId, districtId, childId = null;
+    if (ViewData.Eval("ChildId") != null)
+    {
+        cityId = "CityId";
+        townId = "TownId";
+        districtId = "DistrictId";
+        childId = ViewData.Eval("ChildId").ToString();
+    }
+    else
+    {
+        string spc = "uc";
+        cityId = spc + ".CityId";
+        townId = spc + ".TownId";
+        districtId = spc + ".DistrictId";
+    }
+
+}
+@using (Html.BeginScripts())
+{
+   
+
+    <script type="text/javascript">
+        $(function () {
+
+            $("[name='@(cityId)']").select2();
+            $("[name='@(townId)]'").select2('data', null);
+            $("[name='@(districtId)']").select2('data', null);
+
+            $.post("/City/GetCities", function (j) {
+                var elCity = $("[name='@(cityId)']");
+                elCity.append('<option value="">Lütfen Seçiniz</option>');
+                for (var i = 0; i < j.length; i++) {
+                    elCity.append('<option value="' + j[i].Id + '">' + j[i].Name + '</option>');
+                }
+                elCity.select2();
+            });
+
+            $("[name='@(cityId)']").change(function () {
+                var elDist = $("[name='@(districtId)']");
+                var elTown = $("[name='@(townId)']");
+
+                elDist.select2("val", "");
+                elTown.select2("val", "");
+
+                elDist.html("");
+                elTown.html("");
+                $.post("/City/GetTowns", { cityId: $(this).val() }, function (j) {
+                    elTown.append('<option value="">Lütfen Seçiniz</option>');
+                    for (var i = 0; i < j.length; i++) {
+                        elTown.append('<option value="' + j[i].Id + '">' + j[i].Name + '</option>');
+                    }
+                });
+                elTown.select2();
+                elDist.select2();
+            });
+
+            $("[name='@(townId)']").change(function () {
+                var elDist = $("[name='@(districtId)']");
+                elDist.html("");
+                elDist.select2("val", "");
+                $.post("/City/GetDistricts", { townId: $(this).val() }, function (j) {
+                    var elDist = $("[name='@(districtId)']");
+                    elDist.append('<option value="">Lütfen Seçiniz</option>');
+                    for (var i = 0; i < j.length; i++) {
+                        elDist.append('<option value="' + j[i].Id + '">' + j[i].Name + '</option>');
+                    }
+                })
+            });
+
+            $("[name='@(districtId)']").change(function () {
+                var twnId = $(this).val();
+                $("#@(childId)").val(twnId);
+            });
+        })
+    </script>
+}
+
+<label class="control-label col-md-1">İl</label>
+<div class="col-md-3">
+    <select data-column="cityId" name="@(cityId)" class="form-control"></select>
+</div>
+<label class="control-label col-md-1">İlçe</label>
+<div class="col-md-3">
+    <select data-column="townId" name="@(townId)" class="form-control"></select>
+</div>
+<label class="control-label col-md-1">Mahalle</label>
+<div class="col-md-3">
+    <select data-column="districtId" name="@(districtId)" class="form-control"></select>
+</div>
+
